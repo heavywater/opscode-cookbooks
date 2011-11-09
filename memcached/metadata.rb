@@ -8,7 +8,7 @@ depends           "runit"
 
 recipe "memcached", "Installs and configures memcached"
 
-%w{ ubuntu debian }.each do |os|
+%w{ ubuntu debian centos }.each do |os|
   supports os
 end
 
@@ -31,3 +31,8 @@ attribute "memcached/listen",
   :display_name => "Memcached IP Address",
   :description => "IP address to use for memcached instance",
   :default => "0.0.0.0"
+
+attribute "memcached/maxconn",
+  :display_name => "Memcached Max Connections",
+  :description => "Maximum number of simultaneous connections",
+  :default => "1024"

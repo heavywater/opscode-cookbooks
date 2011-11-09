@@ -21,36 +21,54 @@ package "memcached" do
   action :upgrade
 end
 
-package "libmemcache-dev" do
-  action :upgrade
-end
-
 service "memcached" do
   action :nothing
   supports :status => true, :start => true, :stop => true, :restart => true
 end
 
-template "/etc/memcached.conf" do
-  source "memcached.conf.erb"
-  owner "root"
-  group "root"
-  mode "0644"
-  variables(
-    :listen => node[:memcached][:listen],
-    :user => node[:memcached][:user],
-    :port => node[:memcached][:port],
-    :memory => node[:memcached][:memory]
-  )
-  notifies :restart, resources(:service => "memcached"), :immediately
-end
+case node[:platform]
+when "ubuntu", "debian"
+  package "libmemcache-dev" do
+    action :upgrade
+  end
 
-case node[:lsb][:codename]
-when "karmic"
-  template "/etc/default/memcached" do
-    source "memcached.default.erb"
+  template "/etc/memcached.conf" do
+    source "memcached.conf.erb"
     owner "root"
     group "root"
     mode "0644"
+    variables(
+      :listen => node[:memcached][:listen],
+      :user => node[:memcached][:user],
+      :port => node[:memcached][:port],
+      :memory => node[:memcached][:memory]
+    )
     notifies :restart, resources(:service => "memcached"), :immediately
   end
-end
+  
+  case node[:lsb][:codename]
+  when "karmic"
+    template "/etc/default/memcached" do
+      source "memcached.default.erb"
+      owner "root"
+      group "root"
+      mode "0644"
+      notifies :restart, resources(:service => "memcached"), :immediately
+    end
+  end
+when "centos", "redhat", "fedora"
+  package "memcached-devel"
+    template "/etc/init.d/memcached" do 
+      source "memcached.initd.erb"
+      owner "root"
+      group "root"
+      mode "0755"
+      variables(
+        :user => node[:memcached][:user],
+        :port => node[:memcached][:port],
+        :memory => node[:memcached][:memory],
+        :maxconn => node[:memcached][:maxconn]
+      )
+      notifies :restart, resources(:service => "memcached"), :immediately
+    end
+  end
