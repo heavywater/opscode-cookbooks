@@ -10,15 +10,9 @@ module DataBagHelper
   # bag:: optional data bag
   # Returns value from data bag for provided key and falls back to 
   # node attributes if no value is found within data bag
-  # TODO: Rescue is just a hack to get around chef throwing an error
-  #   when trying to access non-existent keys
   def bag_or_node(key, bag=nil)
     bag ||= retrieve_data_bag
-    begin
-      val = bag[key.to_s] if bag
-    rescue NoMethodError
-      val = nil
-    end
+    val = bag[key.to_s] if bag
     val || node[:djbdns][key]
   end
 
